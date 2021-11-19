@@ -2,6 +2,8 @@
     text-align: center;
 }
 
-.detail img {
-    width: 100%;
+.image {
+    width   : 100%;
+    height  : 40rem;
+    position: relative;
 }
