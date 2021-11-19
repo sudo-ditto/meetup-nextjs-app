@@ -7,6 +7,7 @@ function MeetupDetail(props) {
             <Image
                 src={props.image}
                 alt={props.title}
+                layout="fill"
             />
             <h1>{props.title}</h1>
             <address>{props.address}</address>
