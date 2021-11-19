@@ -1,47 +1,65 @@
+import { MongoClient, ObjectId } from 'mongodb';
+import Head from 'next/head';
 import React from 'react';
 import MeetupDetail from '../../components/meetups/MeetupDetail';
 
-const MeetupsDetails = () => {
+const MeetupsDetails = ({ meetupData }) => {
     return (
-        <MeetupDetail
-            image="https://www.history.com/.image/ar_1:1%2Cc_fill%2Ccs_srgb%2Cfl_progressive%2Cq_auto:good%2Cw_1200/MTU3ODc4NjAzNTM2MTQ4MTkx/hith-eiffel-tower-istock_000016468972large-2.jpg"
-            title="First Meetup"
-            address="Some Street 5, 123456 Some City"
-            description="Meetup description"
-        />
+        <>
+            <Head>
+                <title>{meetupData.title}</title>
+                <meta
+                    name="description"
+                    content={meetup.description} />
+            </Head>
+            <MeetupDetail
+                image={meetupData.image}
+                title={meetupData.title}
+                address={meetupData.address}
+                description={meetupData.description}
+            />
+        </>
     )
 }
 
 export async function getStaticPaths() {
+    // fetch data from an API
+    const client = await MongoClient.connect('mongodb+srv://fireywolf:test1234@cluster0.eg0cz.mongodb.net/meetups?retryWrites=true&w=majority');
+    const db = client.db();
+
+    const meetupsCollection = db.collection('meetups');
+
+    const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+    client.close();
+
     return {
         fallback: false,
-        paths: [
-            {
-                params: {
-                    meetupId: 'm1'
-                }
-            },
-            {
-                params: {
-                    meetupId: 'm2'
-                }
-            }
-        ]
+        paths: meetups.map(meetup => ({
+            params: { meetupId: meetup._id.toString() }
+        }))
     }
 }
 
 export async function getStaticProps(context) {
-    // fetch data for a single meetup
-
     const meetupId = context.params.meetupId;
-    console.log(meetupId);
+    // fetch data from an API
+    const client = await MongoClient.connect('mongodb+srv://fireywolf:test1234@cluster0.eg0cz.mongodb.net/meetups?retryWrites=true&w=majority');
+    const db = client.db();
+
+    const meetupsCollection = db.collection('meetups');
+
+    const selectedMeetup = await meetupsCollection.findOne({ _id: ObjectId(meetupId) });
+    console.log(selectedMeetup)
+    client.close();
+
     return {
         props: {
             meetupData: {
-                image: 'https://www.history.com/.image/ar_1:1%2Cc_fill%2Ccs_srgb%2Cfl_progressive%2Cq_auto:good%2Cw_1200/MTU3ODc4NjAzNTM2MTQ4MTkx/hith-eiffel-tower-istock_000016468972large-2.jpg',
-                id: meetupId,
-                address: 'Some Street 5, 123456 Some City',
-                description: 'Meetup description'
+                id: selectedMeetup._id.toString(),
+                title: selectedMeetup.title,
+                address: selectedMeetup.address,
+                image: selectedMeetup.image,
+                description: selectedMeetup.description
             }
         }
     }
